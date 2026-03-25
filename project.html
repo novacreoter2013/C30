@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Age Verification</title>
+    <style>
+        /* --- ADVANCED CSS (Glassmorphism & Gradients) --- */
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Animated gradient background */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 40px;
+            width: 400px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            text-align: center;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: scale(1.02);
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        p.subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            color: #1e1b4b;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background: #f0f0f0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #statusMsg {
+            margin-top: 20px;
+            min-height: 24px;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 8px;
+            display: none; /* Hidden by default */
+        }
+
+        /* Success/Error States */
+        .msg-error {
+            display: block !important;
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .msg-success {
+            display: block !important;
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+            border: 1px solid rgba(81, 207, 102, 0.3);
+        }
+
+        /* Shake animation for errors */
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="loginCard">
+        <h2>Welcome</h2>
+        <p class="subtitle">Please verify your details to continue</p>
+        
+        <form id="ageForm">
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" placeholder="Enter your name" autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" placeholder="Must be 18+">
+            </div>
+
+            <button type="submit">Verify Identity</button>
+        </form>
+
+        <div id="statusMsg"></div>
+    </div>
+
+    <script>
+        // --- BASIC JAVASCRIPT LOGIC ---
+        const ageForm = document.getElementById('ageForm');
+        const loginCard = document.getElementById('loginCard');
+        const statusMsg = document.getElementById('statusMsg');
+
+        ageForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Stop form from reloading page
+
+            // Get values
+            const nameValue = document.getElementById('fullName').value.trim();
+            const ageValue = parseInt(document.getElementById('age').value);
+
+            // Clear previous styles
+            statusMsg.className = '';
+            loginCard.classList.remove('shake');
+
+            // Validation Logic
+            if (nameValue.length < 3) {
+                showFeedback("Please enter a valid full name (min 3 chars).", "error");
+            } 
+            else if (isNaN(ageValue)) {
+                showFeedback("Please enter a valid age.", "error");
+            } 
+            else if (ageValue < 18) {
+                showFeedback(`Sorry ${nameValue}, you must be 18 or older.`, "error");
+            } 
+            else {
+                showFeedback(`Access Granted! Welcome, ${nameValue}.`, "success");
+            }
+        });
+
+        function showFeedback(text, type) {
+            statusMsg.textContent = text;
+            
+            if (type === "error") {
+                statusMsg.classList.add('msg-error');
+                loginCard.classList.add('shake');
+            } else {
+                statusMsg.classList.add('msg-success');
+            }
+        }
+    </script>
+</body>
+</html>
